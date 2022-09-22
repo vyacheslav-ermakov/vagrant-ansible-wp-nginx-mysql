@@ -1,0 +1,49 @@
+---
+- name: deploy wordpress main node
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Make sure Apache is absent
+      ansible.builtin.apt:
+        name: apache2
+        state: absent
+
+    - name: Install Wordpress
+      ansible.builtin.apt:
+        name: wordpress
+        state: present
+        update_cache: yes
+
+    - name: Install PHP modules
+      ansible.builtin.apt:
+        pkg:
+        - php-mysql
+        - php-curl
+        - php-gd
+        - php-intl
+        - php-mbstring
+        - php-soap
+        - php-xml
+        - php-xmlrpc
+        - php-zip
+        - php-fpm
+        state: present
+
+    - name: Install Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+
+    - name: Dowload and Extract WordPress
+      unarchive:
+        src: https://wordpress.org/latest.tar.gz    
+        dest: /var/www/
+        remote_src: yes
+
+    - name: Update default Nginx site
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
