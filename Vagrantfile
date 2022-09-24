@@ -11,14 +11,13 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "db1" do |db|
     db.vm.hostname = "db1.local"
-    db.vm.network "private_network", ip: "192.168.56.10"
+    db.vm.network "private_network", ip: "192.168.56.15"
     db.vm.provision "ansible", playbook: "mysql_provision.yml"
-
   end
   
   config.vm.define "web1" do |web|
     web.vm.hostname = "web1.local"
-    web.vm.network "private_network", ip: "192.168.56.15"
+    web.vm.network "private_network", ip: "192.168.56.10"
     web.vm.network "forwarded_port", guest: 80, host: 28080 
     web.vm.provision "ansible", playbook: "wordpress_provision.yml"
   end
