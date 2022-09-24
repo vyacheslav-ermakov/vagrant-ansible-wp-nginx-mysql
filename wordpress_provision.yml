@@ -1,21 +1,17 @@
 ---
-- name: deploy wordpress main node
+- name: Deploy WordPress main node
   hosts: all
-  gather_facts: false
-  become: true
+#  gather_facts: false
+#  become: true
   tasks:
-    - name: Make sure Apache is absent
+    - name: Updating Apt cache and making sure Apache is absent
       ansible.builtin.apt:
         name: apache2
         state: absent
-
-    - name: Install Wordpress
-      ansible.builtin.apt:
-        name: wordpress
-        state: present
         update_cache: yes
+      become: yes
 
-    - name: Install PHP modules
+    - name: Installing PHP modules
       ansible.builtin.apt:
         pkg:
         - php-mysql
@@ -29,21 +25,38 @@
         - php-zip
         - php-fpm
         state: present
+      become: yes
 
-    - name: Install Nginx
+    - name: Installing Nginx
       ansible.builtin.apt:
         name: nginx
         state: present
+      become: yes
 
-    - name: Dowload and Extract WordPress
+    - name: Dowloading and Extracting latest Wordpress to /var/www/wordpress
       unarchive:
         src: https://wordpress.org/latest.tar.gz    
         dest: /var/www/
         remote_src: yes
 
-    - name: Update default Nginx site
+    - name: Adding nginx configuration for wordpress site to sites-available
+      ansible.builtin.template:
+        src: nginx_conf_wordpress.j2
+        dest: /etc/nginx/sites-available/wordpress
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
 
-    - name: Restart Nginx
+    - name: Creating symlink from sites-available/wordpress to sites-enabled/default
+      file:
+        src: /etc/nginx/sites-available/wordpress
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      become: yes
+
+    - name: Restarting Nginx
       service:
         name: nginx
         state: restarted
+      become: yes
