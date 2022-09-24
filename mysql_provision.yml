@@ -1,36 +1,47 @@
 ---
-- name: deploy mysql server for wordpress
+- name: Provisioning MySQL Server for WordPress
   hosts: all	
-  gather_facts: false
-  become: true
   tasks:
-    - name: install mysql-server
+    - name: Installing mysql-server
       ansible.builtin.apt:
         name: mysql-server
+        #state: latest
         state: present
         update_cache: yes
-    
+      become: yes
+
     - name: install pip
       ansible.builtin.apt:
         name: python3-pip
         state: present
+      become: yes
 
-    - name: install PyMySQL Python module
+    - name: Installing PyMySQL Python module
       ansible.builtin.pip:
         name:
           - setuptools
           - PyMySQL
-     
-    - name: create wordpress mysql database
+      become: yes     
+
+    - name: Creating 'wordpress' MySQL database
       community.mysql.mysql_db:
         name: wordpress
         state: present
         login_unix_socket: /run/mysqld/mysqld.sock
-    
-    - name: create wordpress user and grant database privileges 
+      become: yes
+
+    - name: Creating 'wordpress' MySQL user and granting database privileges 
       community.mysql.mysql_user:
         name: wordpress
         password: wordpresspw
         priv: 'wordpress.*:ALL'
         state: present
         login_unix_socket: /run/mysqld/mysqld.sock
+      become: yes
+
+    - name: Updating bind-address in mysqld.cnf to allow remote connections
+      ansible.builtin.replace
+       # ?
+
+    - name: Granting access to 'wordpress' MySQL database from 192.168.56.10
+       # ?

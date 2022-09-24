@@ -1,8 +1,6 @@
 ---
 - name: Deploy WordPress main node
   hosts: all
-#  gather_facts: false
-#  become: true
   tasks:
     - name: Updating Apt cache and making sure Apache is absent
       ansible.builtin.apt:
@@ -31,13 +29,22 @@
       ansible.builtin.apt:
         name: nginx
         state: present
-      become: yes
+      become: yes      
 
     - name: Dowloading and Extracting latest Wordpress to /var/www/wordpress
-      unarchive:
+      ansible.builtin.unarchive:
         src: https://wordpress.org/latest.tar.gz    
         dest: /var/www/
         remote_src: yes
+      become: yes
+      
+    - name: Configuring wp-config.php
+      ansible.builtin.template:
+        src: wp-config.php.j2
+        dest: /var/www/wordpress/wp-config.php
+        owner: www-data
+        group: www-data
+      become: yes
 
     - name: Adding nginx configuration for wordpress site to sites-available
       ansible.builtin.template:
