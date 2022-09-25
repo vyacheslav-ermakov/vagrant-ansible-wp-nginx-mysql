@@ -49,5 +49,14 @@
         mode: '0644'       
       become: yes
        
-#    - name: Granting access to 'wordpress' MySQL database from 192.168.56.10
-       # ?
+    - name: Granting access to 'wordpress' MySQL database from 192.168.56.10
+      community.mysql.mysql_query:
+        query: GRANT ALL ON wordpress.* TO wordpress@'192.168.56.10' IDENTIFIED BY 'wordpresspw'
+        login_unix_socket: /run/mysqld/mysqld.sock
+      become: yes 
+
+    - name: Restarting MySQL server
+      ansible.builtin.service:
+        name: mysql
+        state: restarted
+      become: yes
