@@ -37,6 +37,9 @@
         dest: /var/www/
         remote_src: yes
       become: yes
+
+#    - name: Changing ownership of /var/www/wordpress to www-data
+        # ?
       
     - name: Configuring wp-config.php
       ansible.builtin.template:

@@ -39,9 +39,15 @@
         login_unix_socket: /run/mysqld/mysqld.sock
       become: yes
 
-    - name: Updating bind-address in mysqld.cnf to allow remote connections
-      ansible.builtin.replace
-       # ?
-
-    - name: Granting access to 'wordpress' MySQL database from 192.168.56.10
+    - name: Updating bind-address in mysqld.cnf to allow remote connections from web1
+      ansible.builtin.lineinfile:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        search_string: 'bind-address'
+        line: bind-address = 192.168.56.15
+        owner: root
+        group: root
+        mode: '0644'       
+      become: yes
+       
+#    - name: Granting access to 'wordpress' MySQL database from 192.168.56.10
        # ?
