@@ -15,16 +15,26 @@ Vagrant.configure("2") do |config|
     db.vm.provision "ansible", playbook: "mysql_provision.yml"
   end
   
-  config.vm.define "web1" do |web|
-    web.vm.hostname = "web1.local"
-    web.vm.network "private_network", ip: "192.168.56.10"
-    web.vm.network "forwarded_port", guest: 80, host: 28080 
-    web.vm.provision "ansible", playbook: "wordpress_provision.yml"
+  config.vm.define "web1_wp" do |web1|
+    web1.vm.hostname = "web1.local"
+    web1.vm.network "private_network", ip: "192.168.56.10"
+    # temp
+#    web1.vm.network "forwarded_port", guest: 80, host: 28080 
+    web1.vm.provision "ansible", playbook: "wordpress_provision.yml"
+  end
+
+  config.vm.define "web2_wp" do |web2|
+    web2.vm.hostname = "web2.local"
+    web2.vm.network "private_network", ip: "192.168.56.11"
+    # temporary for tests
+#    web2.vm.network "forwarded_port", guest: 80, host: 38080
+    web2.vm.provision "ansible", playbook: "wordpress_provision.yml"
   end
 
   config.vm.define "lb1" do |lb|
     lb.vm.hostname = "lb1.local"
     lb.vm.network "private_network", ip: "192.168.56.16"
+    lb.vm.provision "ansible", playbook: "nginx_lb_provision.yml"
     lb.vm.provider "virtualbox" do |lbvb|
       lbvb.memory = 512
     end  

@@ -51,7 +51,9 @@
        
     - name: Granting access to 'wordpress' MySQL database from 192.168.56.10
       community.mysql.mysql_query:
-        query: GRANT ALL ON wordpress.* TO wordpress@'192.168.56.10' IDENTIFIED BY 'wordpresspw'
+        query: 
+        - GRANT ALL ON wordpress.* TO wordpress@'192.168.56.10' IDENTIFIED BY 'wordpresspw'
+        - GRANT ALL ON wordpress.* TO wordpress@'192.168.56.11' IDENTIFIED BY 'wordpresspw'
         login_unix_socket: /run/mysqld/mysqld.sock
       become: yes 
 
