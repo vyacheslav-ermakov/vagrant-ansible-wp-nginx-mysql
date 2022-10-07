@@ -31,25 +31,50 @@
         state: present
       become: yes      
 
-    - name: Dowloading and Extracting latest Wordpress to /var/www/wordpress
+    - name: "Dowloading and Extracting latest Wordpress to {{ wp_install_dir }}"
       ansible.builtin.unarchive:
-        src: https://wordpress.org/latest.tar.gz    
-        dest: /var/www/
+        src: "https://wordpress.org/{{ wp_version }}.tar.gz"    
+        dest: "{{ wp_install_dir }}"
         remote_src: yes
       become: yes
 
-#    - name: Changing ownership of /var/www/wordpress to www-data
-        # ?
-      
+    # stolen from the internets. investigate!
+    - name: Wordpress | Move files from {{ wp_install_dir }}/wordpress to {{ wp_install_dir }}
+      command: cp -rf . "{{ wp_install_dir }}"
+      args:
+        chdir: "{{ wp_install_dir }}/wordpress/"
+
+    - name: Wordpress | Change ownership of installation directory
+      file:
+        path: "{{ wp_install_dir }}"
+        owner: www-data
+        group: www-data
+        state: directory
+        recurse: yes
+      become: yes
+    
+    - name: Wordpress | Fetch random salts for wp-config.php
+      delegate_to: localhost 
+      uri:
+        url: https://api.wordpress.org/secret-key/1.1/salt/
+      return_content: yes
+      become: False
+      register: 'wp_salt_array'
+
+    - name: set wp_salt fact
+      set_fact:
+        wp_salt: '{{ wp_salt_array.content }}'
+ 
     - name: Configuring wp-config.php
       ansible.builtin.template:
-        src: wp-config.php.j2
-        dest: /var/www/wordpress/wp-config.php
+        src: ./templates/wp-config.php.j2
+        dest: "{{ wp_install_dir }}/wp-config.php"
         owner: www-data
         group: www-data
       become: yes
 
-    - name: Adding nginx configuration for wordpress site to sites-available
+    # check if exists?
+    - name: Adding Nginx configuration for Wordpress site to sites-available
       ansible.builtin.template:
         src: nginx_conf_wordpress.j2
         dest: /etc/nginx/sites-available/wordpress
@@ -65,6 +90,7 @@
         state: link
       become: yes
 
+    # handler
     - name: Restarting Nginx
       service:
         name: nginx

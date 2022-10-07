@@ -5,12 +5,11 @@
     - name: Installing mysql-server
       ansible.builtin.apt:
         name: mysql-server
-        #state: latest
         state: present
         update_cache: yes
       become: yes
 
-    - name: install pip
+    - name: Installing pip
       ansible.builtin.apt:
         name: python3-pip
         state: present
@@ -23,23 +22,23 @@
           - PyMySQL
       become: yes     
 
-    - name: Creating 'wordpress' MySQL database
+    - name: Creating '{{ mysql_db_name }}' MySQL database
       community.mysql.mysql_db:
-        name: wordpress
+        name: '{{ mysql_db_name }}'
         state: present
         login_unix_socket: /run/mysqld/mysqld.sock
       become: yes
 
-    - name: Creating 'wordpress' MySQL user and granting database privileges 
+    - name: Creating '{{ mysql_user }}' MySQL user and granting database privileges 
       community.mysql.mysql_user:
-        name: wordpress
+        name: '{{ mysql_user }}'
         password: wordpresspw
         priv: 'wordpress.*:ALL'
         state: present
         login_unix_socket: /run/mysqld/mysqld.sock
       become: yes
 
-    - name: Updating bind-address in mysqld.cnf to allow remote connections from web1
+    - name: Updating bind-address in mysqld.cnf to allow remote connections on private network interface
       ansible.builtin.lineinfile:
         path: /etc/mysql/mysql.conf.d/mysqld.cnf
         search_string: 'bind-address'
