@@ -1,5 +1,5 @@
 ---
-- name: Deploy Nginx Load Balancer
+- name: Deploying Nginx load balancer
   hosts: all
   tasks: 
     # Not DRY
@@ -11,7 +11,7 @@
 
     - name: Configuring Nginx Load Balancer
       ansible.builtin.template:
-        src: nginx_lb.j2
+        src: '../templates/nginx_lb.j2'
         # Variable (lb)
         dest: /etc/nginx/sites-available/lb
         owner: root
@@ -29,6 +29,7 @@
         state: link
       become: yes
 
+    # Handler
     # Not DRY
     - name: Restarting Nginx
       service: 

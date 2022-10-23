@@ -2,6 +2,9 @@
 - name: Provisioning MySQL Server for WordPress
   hosts: all	
   tasks:
+    - name: Including default vars file
+      ansible.builtin.include_vars: ../defaults/vars.yml
+
     - name: Installing mysql-server
       ansible.builtin.apt:
         name: mysql-server
@@ -9,7 +12,7 @@
         update_cache: yes
       become: yes
 
-    - name: Installing pip
+    - name: Making sure python3-pip is present
       ansible.builtin.apt:
         name: python3-pip
         state: present
@@ -22,16 +25,17 @@
           - PyMySQL
       become: yes     
 
-    - name: Creating '{{ mysql_db_name }}' MySQL database
+    - name: Creating '{{ wp_mysql_db_name }}' MySQL database
       community.mysql.mysql_db:
-        name: '{{ mysql_db_name }}'
+        name: '{{ wp_mysql_db_name }}'
         state: present
         login_unix_socket: /run/mysqld/mysqld.sock
       become: yes
 
-    - name: Creating '{{ mysql_user }}' MySQL user and granting database privileges 
+    - name: Creating '{{ wp_mysql_user }}' MySQL user and granting database privileges 
       community.mysql.mysql_user:
-        name: '{{ mysql_user }}'
+        name: '{{ wp_mysql_user }}'
+        # password
         password: wordpresspw
         priv: 'wordpress.*:ALL'
         state: present
@@ -41,13 +45,14 @@
     - name: Updating bind-address in mysqld.cnf to allow remote connections on private network interface
       ansible.builtin.lineinfile:
         path: /etc/mysql/mysql.conf.d/mysqld.cnf
-        search_string: 'bind-address'
-        line: bind-address = 192.168.56.15
+        regexp: '^bind-address'
+        line: 'bind-address = 192.168.56.15'
         owner: root
         group: root
         mode: '0644'       
       become: yes
-       
+
+    # remove this   
     - name: Granting access to 'wordpress' MySQL database from 192.168.56.10
       community.mysql.mysql_query:
         query: 
@@ -56,6 +61,7 @@
         login_unix_socket: /run/mysqld/mysqld.sock
       become: yes 
 
+    # handler
     - name: Restarting MySQL server
       ansible.builtin.service:
         name: mysql

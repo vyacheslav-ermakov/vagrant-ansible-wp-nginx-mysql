@@ -2,6 +2,9 @@
 - name: Deploy WordPress main node
   hosts: all
   tasks:
+    - name: Including default vars file
+      ansible.builtin.include_vars: ../defaults/vars.yml
+
     - name: Updating Apt cache and making sure Apache is absent
       ansible.builtin.apt:
         name: apache2
@@ -31,20 +34,27 @@
         state: present
       become: yes      
 
-    - name: "Dowloading and Extracting latest Wordpress to {{ wp_install_dir }}"
+    - name: 'Creating {{ wp_install_dir }} directory'
+      file:
+        path: '{{ wp_install_dir }}'
+        state: directory
+        mode: 0755
+      become: yes
+
+    - name: 'Dowloading and Extracting latest Wordpress to {{ wp_install_dir }}'
       ansible.builtin.unarchive:
         src: "https://wordpress.org/{{ wp_version }}.tar.gz"    
         dest: "{{ wp_install_dir }}"
         remote_src: yes
       become: yes
 
-    # stolen from the internets. investigate!
-    - name: Wordpress | Move files from {{ wp_install_dir }}/wordpress to {{ wp_install_dir }}
+    - name: 'Moving files from {{ wp_install_dir }}/wordpress to {{ wp_install_dir }}'
       command: cp -rf . "{{ wp_install_dir }}"
       args:
         chdir: "{{ wp_install_dir }}/wordpress/"
+      become: yes
 
-    - name: Wordpress | Change ownership of installation directory
+    - name: 'Changing ownership of installation directory ({{ wp_install_dir }})'
       file:
         path: "{{ wp_install_dir }}"
         owner: www-data
@@ -53,22 +63,22 @@
         recurse: yes
       become: yes
     
-    - name: Wordpress | Fetch random salts for wp-config.php
+    - name: Fetching random salts for wp-config.php
       delegate_to: localhost 
       uri:
-        url: https://api.wordpress.org/secret-key/1.1/salt/
-      return_content: yes
+        url: 'https://api.wordpress.org/secret-key/1.1/salt/'
+        return_content: yes
       become: False
       register: 'wp_salt_array'
 
-    - name: set wp_salt fact
+    - name: Setting wp_salt fact
       set_fact:
         wp_salt: '{{ wp_salt_array.content }}'
  
     - name: Configuring wp-config.php
       ansible.builtin.template:
-        src: ./templates/wp-config.php.j2
-        dest: "{{ wp_install_dir }}/wp-config.php"
+        src: '../templates/wp-config.php.j2'
+        dest: '{{ wp_install_dir }}/wp-config.php'
         owner: www-data
         group: www-data
       become: yes
@@ -76,8 +86,8 @@
     # check if exists?
     - name: Adding Nginx configuration for Wordpress site to sites-available
       ansible.builtin.template:
-        src: nginx_conf_wordpress.j2
-        dest: /etc/nginx/sites-available/wordpress
+        src: '../templates/nginx_conf_wordpress.j2'
+        dest: '/etc/nginx/sites-available/wordpress'
         owner: root
         group: root
         mode: '0644'
